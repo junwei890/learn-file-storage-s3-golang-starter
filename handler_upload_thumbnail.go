@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"os"
 	"strings"
+	"crypto/rand"
+	"encoding/base64"
 
 	"github.com/bootdotdev/learn-file-storage-s3-golang-starter/internal/auth"
 	"github.com/google/uuid"
@@ -67,7 +69,13 @@ func (cfg *apiConfig) handlerUploadThumbnail(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	fileName := fmt.Sprintf("%s.%s", videoIDString, strings.Split(mediaType, "/")[1])
+	byteSlice := make([]byte, 32)
+	if _, err := rand.Read(byteSlice); err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Unable to fill slice of bytes", err)
+	}
+	randomName := base64.RawURLEncoding.EncodeToString(byteSlice)
+
+	fileName := fmt.Sprintf("%s.%s", randomName, strings.Split(mediaType, "/")[1])
 	filePath := filepath.Join(cfg.assetsRoot, fileName)
 	createdFile, err := os.Create(filePath)
 	if err != nil {
