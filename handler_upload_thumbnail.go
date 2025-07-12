@@ -32,7 +32,6 @@ func (cfg *apiConfig) handlerUploadThumbnail(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-
 	fmt.Println("uploading thumbnail for video", videoID, "by user", userID)
 
 	const maxMemory = 10 << 20
@@ -49,7 +48,11 @@ func (cfg *apiConfig) handlerUploadThumbnail(w http.ResponseWriter, r *http.Requ
 
 	mediaType := fileHeader.Header.Get("Content-Type")
 	if mediaType == "" {
-		respondWithError(w, http.StatusBadRequest, "Media type not specified", err)
+		respondWithError(w, http.StatusBadRequest, "Media type not specified", nil)
+		return
+	}
+	if mediaType != "image/png" && mediaType != "image/jpeg" {
+		respondWithError(w, http.StatusBadRequest, "Invalid file types", nil)
 		return
 	}
 
