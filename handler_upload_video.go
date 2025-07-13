@@ -91,6 +91,19 @@ func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request)
 		prefix = "other"
 	}
 
+	processedVideoFileName, err := processVideoForFastStart(tempFile.Name())
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Unable to process video", err)
+		return
+	}
+	processedVideo, err := os.Open(processedVideoFileName)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Unable to open processed file", err)
+		return
+	}
+	defer os.Remove(processedVideoFileName)
+	defer processedVideo.Close()
+
 	byteSlice := make([]byte, 32)
 	if _, err := rand.Read(byteSlice); err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Unable to fill slice of bytes", err)
@@ -101,7 +114,7 @@ func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request)
 	putObjectParams := &s3.PutObjectInput{
 		Bucket: &cfg.s3Bucket,
 		Key: &fileKey,
-		Body: tempFile,
+		Body: processedVideo,
 		ContentType: &mediaType,
 	}
 	if _, err := cfg.s3Client.PutObject(r.Context(), putObjectParams); err != nil {
