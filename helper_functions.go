@@ -6,10 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"time"
-	"context"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"encoding/json"
 )
 
@@ -62,17 +58,4 @@ func processVideoForFastStart(filePath string) (string, error) {
 	}
 	
 	return outputFilePath, nil
-}
-
-func generatePresignedURL(s3Client *s3.Client, bucket, key string, expireTime time.Duration) (string, error) {
-	presignClient := s3.NewPresignClient(s3Client)
-	params := &s3.GetObjectInput{
-		Bucket: aws.String(bucket),
-		Key: aws.String(key),
-	}
-	presignedRequest, err := presignClient.PresignGetObject(context.TODO(), params, s3.WithPresignExpires(expireTime))
-	if err != nil {
-		return "", errors.New("unable to generate a presigned http request")
-	}
-	return presignedRequest.URL, nil
 }
